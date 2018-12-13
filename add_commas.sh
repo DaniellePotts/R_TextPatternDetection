@@ -1,0 +1,1 @@
+sed '$!s/$/,/' 'games.jsonl' 'games_formatted.json'
