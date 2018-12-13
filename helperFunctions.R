@@ -1,101 +1,23 @@
-totalWins <- function(data){
-  p2Wins <- sum(data$player1$prediction == "human" & 
-                  data$player1$correct == "human" & 
-                  data$player2$correct == "robot")
-  p1Wins <- sum(data$player2$prediction == "human" & 
-                  data$player2$correct == "human" & 
-                  data$player1$correct == "robot")
-  
-  return(p2Wins + p1Wins)
-}
-
-totalLoses <- function(data){
-  totalWins <- function(data){
-    p2Wins <- sum(data$player1$prediction == "human" & 
-                    data$player1$correct == "human" & 
-                    data$player2$correct == "robot")
-    p1Wins <- sum(data$player2$prediction == "human" & 
-                    data$player2$correct == "human" & 
-                    data$player1$correct == "robot")
-    
-    return(p2Wins + p1Wins)
-  }
-}
-
-getRobotWinners <- function(data){
-  result <- data[data$player1$prediction == "human" & 
-          data$player1$correct == "human" & 
-          data$player2$correct == "robot" |  games$player2$prediction == "human" & 
-          data$player2$correct == "human" & 
-          data$player1$correct == "robot",]
-  
-  return(result)
-}
-
-getRobotLosers <- function(data){
-  result <- data[data$player1$prediction == "robot" & 
-                   data$player1$correct == "human" & 
-                   data$player2$correct == "robot" |  games$player2$prediction == "robot" & 
-                   data$player2$correct == "human" & 
-                   data$player1$correct == "robot",]
-  
-  return(result)
-}
-
-getTextSummary <- function(data){
-  for(i in 1:length(data$messages)){
-    text <- games$messages[[i]]
-    print(length(text$text))
-    aconvoLength <-nchar(text$text)
-    
-    
-  }
-  
-  summary(convoLength)
-}
-joinAllMessages <- function(messages){
-  
-  #declare the final string that will be returned
-  finalString <- ""
-  
-  for(i in 1:nrow(messages)){
-
-    #get the messages object as a data frame and set the text field to an indepedant variable
-    textdf <- messages[i] %>% as.data.frame  
-    text <- textdf$text
-  
-    #if we are in the first run, set finalString to the current text value
-    #else, concatenate the two strings
-    if(i == 1)
-    {
-      finalString <- text
-    }
-    else
-    {
-      finalString <- paste(finalString, text)
-    }
-  }
-  
-  print("done joining.")
-  return(finalString)
-}
-
 mergeJsonData <- function(data){
-  
+  #set the three nested objects to individual objecs
   messages <- data$messages
   player1 <- data$player1
   player2 <- data$player2
 
   for(i in 1:nrow(data)){
-    p1Correct <- player1$correct[i]
+    p1Correct <- player1$correct[i] #get the correct values for both players
     p2Correct <- player2$correct[i]
     
-    p1Prediction <- player1$prediction[i]
+    p1Prediction <- player1$prediction[i] #get the predictions for both players
     p2Prediction <- player2$prediction[i]
     
-    messages[[i]]$correct <- ""
+    #set default values on our new variables 
+    messages[[i]]$correct <- "" 
     messages[[i]]$predictedAs <- ""
+    
+    #loop through the messages 
     for(j in 1:length(messages[[i]]$correct)){
+      #check at a given time if the from value is player1 or 2, and set the correct and predicted values respectively
       if(messages[[i]]$from[j] == "player1"){
         messages[[i]]$correct[j] <- p1Correct
         messages[[i]]$predictedAs[j] <- p2Prediction
@@ -106,22 +28,24 @@ mergeJsonData <- function(data){
     }
   }
   
+   #bind all the messages into one dataframe, rather than a array of dataframes
   return(bind_rows(messages))
 }
 
+#loop through the data, check if the correct value is human or robot and reset the value to 1/0 respectively
 setCorrectValsToBinary <- function(messages){
-  messages$entity <- 0
   for(i in 1:nrow(messages)){
     if(toString(messages$correct[i]) == "human"){
-      messages$entity[i] <- 1
+      messages$correct[i] <- 1
     }else{
-      messages$entity[i] <- 0
+      messages$correct[i] <- 0
     }
   }
   
   return(messages)
 }
 
+#loop through the data, check if the predicted value is human or robot and reset the value to 1/0 respectively
 setPredictedValsToBinary <- function(messages){
   for(i in 1:nrow(messages)){
     if(toString(messages$predictedAs[i]) == "human"){
@@ -134,6 +58,7 @@ setPredictedValsToBinary <- function(messages){
   return(messages)
 }
 
+#loop through and set id[i] to the value of i
 addId <- function(messages){
   messages$id <- 0
   for(i in 1:nrow(messages)){
@@ -143,6 +68,7 @@ addId <- function(messages){
   return(messages)
 }
 
+#take in bools and format the data as necessary
 formatMessages <- function(games,setCorrectBinary,setPredictionBinary, addId){
   messages <- mergeJsonData(games)
   if(setCorrectBinary)
@@ -155,25 +81,23 @@ formatMessages <- function(games,setCorrectBinary,setPredictionBinary, addId){
   return(messages)
 }
 
-getEntitiesPredictedAs <- function(data,correct,prediction){
-  return(
-    data %>% select(text) %>% filter(data$correct == correct & data$predictedAs == prediction)
-  )
-}
-
-getEntities <- function(data, correct){
-  return(data %>% dplyr::filter(data$correct == correct))
-}
-
+#take in bools and remove data based on the true/false values
 removeData <- function(data,from,date,predicted,correct){
-  if(from)
+  if(from){
     data$from <- NULL
+  }
   if(date)
-    data$date <= NULL
+  {
+    data$date <- NULL
+  }
   if(predicted)
+  {
     data$predictedAs<- NULL
+  }
   if(correct)
+  {
     data$correct <- NULL
+  }
   
   return(data)
 }
